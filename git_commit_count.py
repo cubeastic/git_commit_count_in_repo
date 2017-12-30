@@ -3,6 +3,7 @@ from time import ctime, strftime, localtime
 from os import path
 from sys import exit
 import xml.etree.ElementTree as Et  # Import the function for xml handling
+import time
 
 
 class GitCounter:
@@ -35,15 +36,22 @@ class GitCounter:
             exit()
 
     def unix_to_time(self, t):
-        return strftime("%d/%m/%y", localtime(int(t)))
+        return strftime("%Y-%m-%d", localtime(int(t)))
 
     def count_commits(self):
         if self.repositories:
             for owner, repo in self.repositories.items():
-                print(get(self.api_addr.format(owner, repo))).json()
+                json_obj = get(self.api_addr.format(owner, repo)).json()
+                for elem in json_obj:
+                    try:
+                        if self.last_X_months(elem["week"]):
+                            print self.unix_to_time(elem["week"])
+                    except:
+                        print json_obj["message"]
 
-    def last_X_months(self):
-        if abs(now - self.unix_to_time(time)) < X
+    def last_X_months(self, t):
+        return abs(t - time.time()) < (2592000 * self.time_frame)
+
 
 a = GitCounter()
 a.get_list()
