@@ -1,10 +1,11 @@
 from requests import get
 from time import ctime, strftime
 
+
 class GitQ:
 
     def __init__(self):
-        self.owner
+        self.owner =
 
 print(get("https://api.github.com/repos/cubeastic/sheets_to_slides/stats/commit_activity")).json()
 
