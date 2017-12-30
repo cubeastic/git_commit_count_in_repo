@@ -1,8 +1,8 @@
 from requests import get
 from time import ctime, strftime
 
-class GitQ:
-
+class GitCounter:
+    
     def __init__(self):
         self.owner
 
