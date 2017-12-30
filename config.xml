@@ -1,4 +1,5 @@
 <git_repos>
     <repos_file>repo_list.txt</repos_file>
     <last_X_months>3</last_X_months>
+    <git_token>69400fe7e53ad23170c6778318d4894d9915cf95</git_token>
 </git_repos>

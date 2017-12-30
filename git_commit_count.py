@@ -1,9 +1,10 @@
-from requests import get
-from time import ctime, strftime, localtime
+from requests import get, post
+from time import ctime, strftime, localtime, time
 from os import path
 from sys import exit
 import xml.etree.ElementTree as Et  # Import the function for xml handling
-import time
+from beautifultable import BeautifulTable
+from random import randint
 
 
 class GitCounter:
@@ -11,10 +12,13 @@ class GitCounter:
     def __init__(self):
         self.config_file = "config.xml"
         if path.exists(self.config_file):
+            self.token = self.get_config("git_token")
             self.repos_file = self.get_config("repos_file")
             self.time_frame = self.get_config("last_X_months")
             self.repositories = dict()
             self.api_addr = "https://api.github.com/repos/{0}/{1}/stats/commit_activity"
+            self.headers = {'Authorization': 'token {}'.format(self.token)}
+
         else:
             print("ERROR: {0} was not found".format(self.config_file))
             exit()
@@ -41,7 +45,7 @@ class GitCounter:
     def count_commits(self):
         if self.repositories:
             for owner, repo in self.repositories.items():
-                json_obj = get(self.api_addr.format(owner, repo)).json()
+                json_obj = get(self.api_addr.format(owner, repo), headers=self.headers).json()
                 for elem in json_obj:
                     try:
                         if self.last_X_months(elem["week"]):
@@ -50,7 +54,15 @@ class GitCounter:
                         print json_obj["message"]
 
     def last_X_months(self, t):
-        return abs(t - time.time()) < (2592000 * self.time_frame)
+        return abs(t - time()) < (2592000 * self.time_frame)
+
+    def build_table(self):
+        table = BeautifulTable()
+        table.column_headers = ["Owner", "Name", "Commits"]
+        for owner, repo in self.repositories.items():
+            table.append_row([owner, repo, randint(1, 99)])
+        table.sort("Commits")
+        return table
 
 
 a = GitCounter()
