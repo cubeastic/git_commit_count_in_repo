@@ -1,0 +1,4 @@
+<git_repos>
+    <repos_file>repo_list.txt</repos_file>
+    <last_X_months>3</last_X_months>
+</git_repos>
