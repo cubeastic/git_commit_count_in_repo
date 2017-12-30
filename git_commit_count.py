@@ -18,6 +18,7 @@ class GitCounter:
             self.repositories = dict()
             self.api_addr = "https://api.github.com/repos/{0}/{1}/stats/commit_activity"
             self.headers = {'Authorization': 'token {}'.format(self.token)}
+            self.errors = (401, 400, 403, 404)
 
         else:
             print("ERROR: {0} was not found".format(self.config_file))
@@ -43,15 +44,20 @@ class GitCounter:
         return strftime("%Y-%m-%d", localtime(int(t)))
 
     def count_commits(self):
-        if self.repositories:
-            for owner, repo in self.repositories.items():
-                json_obj = get(self.api_addr.format(owner, repo), headers=self.headers).json()
-                for elem in json_obj:
-                    try:
-                        if self.last_X_months(elem["week"]):
-                            print self.unix_to_time(elem["week"])
-                    except:
-                        print json_obj["message"]
+        if get("https://api.github.com", headers=self.headers).status_code not in self.errors:
+            if self.repositories:
+                for owner, repo in self.repositories.items():
+                    json_obj = get(self.api_addr.format(owner, repo), headers=self.headers).json()
+                    for elem in json_obj:
+                        try:
+                            if self.last_X_months(elem["week"]):
+                                print self.unix_to_time(elem["week"])
+                        except:
+                            print json_obj["message"]
+        else:
+            print("ERROR: please enter a valid token key")
+
+
 
     def last_X_months(self, t):
         return abs(t - time()) < (2592000 * self.time_frame)
