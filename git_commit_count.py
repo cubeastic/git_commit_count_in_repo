@@ -57,8 +57,6 @@ class GitCounter:
         else:
             print("ERROR: please enter a valid token key")
 
-
-
     def last_X_months(self, t):
         return abs(t - time()) < (2592000 * self.time_frame)
 
