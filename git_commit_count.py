@@ -1,6 +1,6 @@
 from requests import get    # Import the function to talk with the API
 from time import mktime, strptime   # Import the function for time conversion
-from os import path     # Import the function to check for the existence of config files
+from os import path, system     # Import the function to check for the existence of config files
 from sys import exit    # Import the function for future uses
 import xml.etree.ElementTree as Et  # Import the function for xml handling
 from beautifultable import BeautifulTable   # Import the function to make the final table
@@ -86,10 +86,12 @@ class GitCounter:
             table.column_headers = ["Name", "Commits", "New Branches"]
             for owner, repo in self.repositories.items():
                 table.append_row([repo[0], self.count_commits(owner, repo), self.branch_check(owner, repo)])
-            return table
+                yield table
 
 
 if __name__ == "__main__":
     a = GitCounter()
     # Print the table with the results
-    print(a.build_table())
+    for row in a.build_table():
+        print("\033[H\033[J")
+        print(row)
