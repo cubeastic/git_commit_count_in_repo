@@ -9,5 +9,5 @@ https://github.com/settings/tokens
 3. Place all the repos you want to check inside a text file and 
 enter the name of the file inside config.xml in "repos_file" field.
 
-4. Enter the time frame you want to check in months, e.g 3.
+4. Enter the time frame you want to check in months, from date / to date.
 
