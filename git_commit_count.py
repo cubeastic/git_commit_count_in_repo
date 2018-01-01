@@ -15,7 +15,7 @@ class GitCounter:
             self.token = self.get_config("git_token")   # GitHubs API Personal Token
             self.repos_file = self.get_config("repos_file")     # The file that holds the repositories
             self.from_date = int(mktime(strptime(self.get_config("from_date"), "%d/%m/%Y")))    # Convert to Unix
-            self.to_date = int(mktime(strptime(self.get_config("to_date"), "%d/%m/%Y")))        # Conver to Unix
+            self.to_date = int(mktime(strptime(self.get_config("to_date"), "%d/%m/%Y")))        # Convert to Unix
             self.repositories = dict()
             self.commit_url = "https://api.github.com/repos/{0}/{1}/stats/commit_activity"
             self.branches_url = "https://api.github.com/repos/{0}/{1}/branches"
@@ -50,14 +50,16 @@ class GitCounter:
     def count_commits(self, owner, repo):
         if get("https://api.github.com", headers=self.headers).status_code not in self.errors:
             json_obj = get(self.commit_url.format(owner, repo[0]), headers=self.headers).json()
-            if json_obj["message"] != "Not Found":
-                for o in json_obj:
-                    if self.from_date < o["week"] < self.to_date:
-                        repo[1] += o["total"]
-                return repo[1]
-            else:
-                print("ERROR: please check the name, {0} was not found".format(repo[0]))
-                exit()
+            try:
+                if json_obj["message"] == "Not Found":
+                    print("ERROR: please check the repository name, {0} was not found".format(repo[0]))
+                    exit()
+            except TypeError:
+                pass
+            for o in json_obj:
+                if self.from_date < o["week"] < self.to_date:
+                    repo[1] += o["total"]
+            return repo[1]
         else:
             print("ERROR: please enter a valid token key")
 
