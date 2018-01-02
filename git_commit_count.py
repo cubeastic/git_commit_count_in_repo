@@ -1,6 +1,6 @@
 from requests import get    # Import the function to talk with the API
 from time import mktime, strptime   # Import the function for time conversion
-from os import path, system     # Import the function to check for the existence of config files
+from os import path     # Import the function to check for the existence of config files
 from sys import exit    # Import the function for future uses
 import xml.etree.ElementTree as Et  # Import the function for xml handling
 from beautifultable import BeautifulTable   # Import the function to make the final table
@@ -50,33 +50,31 @@ class GitCounter:
     def count_commits(self, owner, repo):
         if get("https://api.github.com", headers=self.headers).status_code not in self.errors:
             json_obj = get(self.commit_url.format(owner, repo[0]), headers=self.headers).json()
-            try:
-                if json_obj["message"] == "Not Found":
-                    print("ERROR: please check the repository name, {0} was not found".format(repo[0]))
-                    exit()
-            except TypeError:
-                pass
-            for o in json_obj:
-                if self.from_date < o["week"] < self.to_date:
-                    repo[1] += o["total"]
-            return repo[1]
+            if "Not Found" not in str(json_obj):
+                for o in json_obj:
+                    if self.from_date < o["week"] < self.to_date:
+                        repo[1] += o["total"]
+                return repo[1]
+            else:
+                print("ERROR: please check the repository name, {0} was not found".format(repo[0]))
+                exit()
         else:
             print("ERROR: please enter a valid token key")
+            exit()
 
     # Count the number of new branches between the dates that were provided
     def branch_check(self, owner, repo):
-        if get("https://api.github.com", headers=self.headers).status_code not in self.errors:
-            json_obj = get(self.branches_url.format(owner, repo[0]), headers=self.headers).json()
-            # Only if there are more than one branches, check for new ones. 1 = master
-            if len(json_obj) > 1:
-                cnt = 0
-                for o in json_obj:
-                    b = get(self.branch_url.format(owner, repo[0], o["name"]), headers=self.headers).json()
-                    # Before checking, convert the given time zone time to unix
-                    bd = int(mktime(strptime(str(b["commit"]["commit"]["author"]["date"]), "%Y-%m-%dT%H:%M:%SZ")))
-                    if self.from_date < bd < self.to_date:
-                        cnt += 1
-                return cnt
+        json_obj = get(self.branches_url.format(owner, repo[0]), headers=self.headers).json()
+        # Only if there are more than one branches, check for new ones. 1 = master
+        if len(json_obj) > 1:
+            cnt = 0
+            for o in json_obj:
+                b = get(self.branch_url.format(owner, repo[0], o["name"]), headers=self.headers).json()
+                # Before checking, convert the given time zone time to unix
+                bd = int(mktime(strptime(str(b["commit"]["commit"]["author"]["date"]), "%Y-%m-%dT%H:%M:%SZ")))
+                if self.from_date < bd < self.to_date:
+                    cnt += 1
+            return cnt
 
     # Build the table for the use to see the results
     def build_table(self):
@@ -90,8 +88,15 @@ class GitCounter:
 
 
 if __name__ == "__main__":
-    a = GitCounter()
-    # Print the table with the results
-    for row in a.build_table():
-        print("\033[H\033[J")
-        print(row)
+    try:
+        a = GitCounter()
+        # Use the dates form the XML file
+        a.fdate = a.get_config("from_date")
+        a.tdate = a.get_config("to_date")
+        # Print the table with the results
+        for row in a.build_table():
+            print("\033[H\033[J")
+            print("Time Frame: {0} - {1}".format(a.fdate, a.tdate))
+            print(row)
+    except KeyboardInterrupt:
+        exit()
