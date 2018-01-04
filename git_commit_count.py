@@ -1,5 +1,5 @@
 from requests import get    # Import the function to talk with the API
-from time import mktime, strptime   # Import the function for time conversion
+from time import mktime, strptime, sleep   # Import the function for time conversion
 from os import path     # Import the function to check for the existence of config files
 from sys import exit    # Import the function for future uses
 import xml.etree.ElementTree as Et  # Import the function for xml handling
@@ -39,8 +39,9 @@ class GitCounter:
         if path.exists(self.repos_file):
             with open(self.repos_file) as f:
                 for i in f:
-                    # { owner: [name, commits] }
-                    self.repositories[i.split("/")[3]] = [i.split("/")[4].replace("\n", ""), 0]
+                    if i != "\n":
+                        # { owner: [name, commits] }
+                        self.repositories[i.split("/")[3].replace(" ", "")] = [i.split("/")[4].replace("\n", ""), 0]
             return True
         else:
             print("ERROR: {0} was not found".format(self.repos_file))
@@ -65,16 +66,16 @@ class GitCounter:
     # Count the number of new branches between the dates that were provided
     def branch_check(self, owner, repo):
         json_obj = get(self.branches_url.format(owner, repo[0]), headers=self.headers).json()
+        cnt = 0
         # Only if there are more than one branches, check for new ones. 1 = master
         if len(json_obj) > 1:
-            cnt = 0
             for o in json_obj:
                 b = get(self.branch_url.format(owner, repo[0], o["name"]), headers=self.headers).json()
                 # Before checking, convert the given time zone time to unix
                 bd = int(mktime(strptime(str(b["commit"]["commit"]["author"]["date"]), "%Y-%m-%dT%H:%M:%SZ")))
                 if self.from_date < bd < self.to_date:
                     cnt += 1
-            return cnt
+        return cnt if cnt != 0 else 0
 
     # Build the table for the use to see the results
     def build_table(self):
@@ -83,6 +84,8 @@ class GitCounter:
             # According to the users request
             table.column_headers = ["Name", "Commits", "New Branches"]
             for owner, repo in self.repositories.items():
+                get(self.branches_url.format(owner, repo[0]), headers=self.headers).json()
+                sleep(4)
                 table.append_row([repo[0], self.count_commits(owner, repo), self.branch_check(owner, repo)])
                 yield table
 
