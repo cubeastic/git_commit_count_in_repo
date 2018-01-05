@@ -1,7 +1,7 @@
 from requests import get    # Import the function to talk with the API
-from time import mktime, strptime, sleep   # Import the function for time conversion
-from os import path     # Import the function to check for the existence of config files
-from sys import exit    # Import the function for future uses
+from time import mktime, strptime, strftime, sleep   # Import the function for time conversion
+from os import path, sep    # Import the function to check for the existence of config files
+from sys import exit, executable    # Import the function for future uses
 import xml.etree.ElementTree as Et  # Import the function for xml handling
 from beautifultable import BeautifulTable   # Import the function to make the final table
 
@@ -10,12 +10,15 @@ from beautifultable import BeautifulTable   # Import the function to make the fi
 class GitCounter:
     
     def __init__(self):
-        self.config_file = "config.xml"
+        self.current_time = strftime("%H%M_%d%m%y")
+        self.pwd = self.rnd(path.dirname(executable))
+        self.config_file = self.rnd("config.xml")
         if path.exists(self.config_file):
             self.token = self.get_config("git_token")   # GitHubs API Personal Token
-            self.repos_file = self.get_config("repos_file")     # The file that holds the repositories
+            self.repos_file = self.rnd(self.get_config("repos_file"))    # The file that holds the repositories
             self.from_date = int(mktime(strptime(self.get_config("from_date"), "%d/%m/%Y")))    # Convert to Unix
             self.to_date = int(mktime(strptime(self.get_config("to_date"), "%d/%m/%Y")))        # Convert to Unix
+            self.report_id = self.rnd(self.get_config("report_id") + "_" + self.current_time + ".txt")
             self.repositories = dict()
             self.commit_url = "https://api.github.com/repos/{0}/{1}/stats/commit_activity"
             self.branches_url = "https://api.github.com/repos/{0}/{1}/branches"
@@ -26,6 +29,12 @@ class GitCounter:
         else:
             print("ERROR: {0} was not found".format(self.config_file))
             exit()
+
+    def rnd(self, cf):
+        if "Python.app" not in path.dirname(executable):
+            return path.dirname(executable) + sep + cf
+        else:
+            return cf
 
     # Loop through the config file and return the requested value from the requested tag
     def get_config(self, field):
@@ -84,10 +93,13 @@ class GitCounter:
             # According to the users request
             table.column_headers = ["Name", "Commits", "New Branches"]
             for owner, repo in self.repositories.items():
+                get(self.commit_url.format(owner, repo[0]), headers=self.headers).json()
                 get(self.branches_url.format(owner, repo[0]), headers=self.headers).json()
-                sleep(4)
+                sleep(3)
                 table.append_row([repo[0], self.count_commits(owner, repo), self.branch_check(owner, repo)])
                 yield table
+            with open(self.report_id, "a") as f:
+                f.write(str(table))
 
 
 if __name__ == "__main__":
@@ -101,5 +113,5 @@ if __name__ == "__main__":
             print("\033[H\033[J")
             print("Time Frame: {0} - {1}".format(a.fdate, a.tdate))
             print(row)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, SyntaxError):
         exit()
