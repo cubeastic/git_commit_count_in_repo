@@ -1,6 +1,6 @@
 <git_repos>
     <repos_file>repo_list.txt</repos_file>
-    <from_date>01/07/2017</from_date>
+    <from_date>01/01/2017</from_date>
     <to_date>01/11/2017</to_date>
     <git_token>69400fe7e53ad23170c6778318d4894d9915cf95</git_token>
     <report_id>output</report_id>

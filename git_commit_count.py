@@ -30,11 +30,18 @@ class GitCounter:
             print("ERROR: {0} was not found".format(self.config_file))
             exit()
 
+    # Allow us to run this app in debug mode or complied mode, return path if running compiled
     def rnd(self, cf):
         if "Python.app" not in path.dirname(executable):
             return path.dirname(executable) + sep + cf
         else:
             return cf
+
+    # Print the time frame to the console and to the output file
+    def timep(self):
+        fd = self.get_config("from_date")
+        td = self.get_config("to_date")
+        return "Time Frame: {0} - {1}\n".format(fd, td)
 
     # Loop through the config file and return the requested value from the requested tag
     def get_config(self, field):
@@ -58,8 +65,10 @@ class GitCounter:
 
     # Count the commits using the given owner and repo name and counter
     def count_commits(self, owner, repo):
+        # Start with checking the response, if fails probably because of non valid API key
         if get("https://api.github.com", headers=self.headers).status_code not in self.errors:
             json_obj = get(self.commit_url.format(owner, repo[0]), headers=self.headers).json()
+            # Check if the repository was entered not correctly
             if "Not Found" not in str(json_obj):
                 for o in json_obj:
                     if self.from_date < o["week"] < self.to_date:
@@ -93,12 +102,15 @@ class GitCounter:
             # According to the users request
             table.column_headers = ["Name", "Commits", "New Branches"]
             for owner, repo in self.repositories.items():
+                # To avoid 202 and getting 0 as return, run the request -> wait -> run again
                 get(self.commit_url.format(owner, repo[0]), headers=self.headers).json()
                 get(self.branches_url.format(owner, repo[0]), headers=self.headers).json()
                 sleep(3)
+                # Append to table
                 table.append_row([repo[0], self.count_commits(owner, repo), self.branch_check(owner, repo)])
                 yield table
             with open(self.report_id, "a") as f:
+                f.write(self.timep())
                 f.write(str(table))
 
 
@@ -106,12 +118,10 @@ if __name__ == "__main__":
     try:
         a = GitCounter()
         # Use the dates form the XML file
-        a.fdate = a.get_config("from_date")
-        a.tdate = a.get_config("to_date")
         # Print the table with the results
         for row in a.build_table():
             print("\033[H\033[J")
-            print("Time Frame: {0} - {1}".format(a.fdate, a.tdate))
+            print(a.timep())
             print(row)
     except (KeyboardInterrupt, SyntaxError):
         exit()
