@@ -18,7 +18,7 @@ class GitCounter:
             self.repos_file = self.rnd(self.get_config("repos_file"))    # The file that holds the repositories
             self.from_date = int(mktime(strptime(self.get_config("from_date"), "%d/%m/%Y")))    # Convert to Unix
             self.to_date = int(mktime(strptime(self.get_config("to_date"), "%d/%m/%Y")))        # Convert to Unix
-            self.report_id = self.rnd(self.get_config("report_id") + "_" + self.current_time + ".txt")
+            self.commit_report = self.rnd(self.get_config("commit_report") + "_" + self.current_time + ".txt")
             self.repositories = dict()
             self.commit_url = "https://api.github.com/repos/{0}/{1}/stats/commit_activity"
             self.branches_url = "https://api.github.com/repos/{0}/{1}/branches"
@@ -109,7 +109,7 @@ class GitCounter:
                 # Append to table
                 table.append_row([repo[0], self.count_commits(owner, repo), self.branch_check(owner, repo)])
                 yield table
-            with open(self.report_id, "a") as f:
+            with open(self.commit_report, "a") as f:
                 f.write(self.timep())
                 f.write(str(table))
 
