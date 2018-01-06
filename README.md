@@ -1,5 +1,5 @@
 # git_commit_count
-Track repositories and the number of commits they have
+Track repositories and the number of commits and new branches they have
 
 1. Create a Personal Token Key from the following site:
 https://github.com/settings/tokens
