@@ -41,7 +41,7 @@ class GitCounter:
     def timep(self):
         fd = self.get_config("from_date")
         td = self.get_config("to_date")
-        return "Time Frame:{0} - {1}\n".format(fd, td)
+        return "Time Frame: {0} - {1}\n".format(fd, td)
 
     # Loop through the config file and return the requested value from the requested tag
     def get_config(self, field):
